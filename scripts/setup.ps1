@@ -21,7 +21,11 @@ try {
     throw "setup-baml: official installer checksum verification failed"
   }
 
+  $global:LASTEXITCODE = 0
   & $Installer -WrapperOnly -NoModifyPath -Yes
+  if ($LASTEXITCODE -ne 0) {
+    throw "setup-baml: official installer failed with exit code $LASTEXITCODE"
+  }
 
   $Requested = if ($env:INPUT_TOOLCHAIN) { $env:INPUT_TOOLCHAIN } else { "" }
   $VersionOverride = ""
