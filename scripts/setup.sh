@@ -52,9 +52,13 @@ if [[ ! -x "$wrapper" || ! -x "$toolchain_path" ]]; then
 fi
 
 printf '%s\n' "$bin_dir" >> "$GITHUB_PATH"
-printf 'BAML_HOME=%s\n' "$BAML_HOME" >> "$GITHUB_ENV"
-printf 'BAML_VERSION=%s\n' "$version_override" >> "$GITHUB_ENV"
-printf 'BAML_MANIFEST_BASE_URL=\n' >> "$GITHUB_ENV"
-printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"
-printf 'path=%s\n' "$wrapper" >> "$GITHUB_OUTPUT"
-printf 'toolchain-path=%s\n' "$toolchain_path" >> "$GITHUB_OUTPUT"
+{
+  printf 'BAML_HOME=%s\n' "$BAML_HOME"
+  printf 'BAML_VERSION=%s\n' "$version_override"
+  printf 'BAML_MANIFEST_BASE_URL=\n'
+} >> "$GITHUB_ENV"
+{
+  printf 'version=%s\n' "$version"
+  printf 'path=%s\n' "$wrapper"
+  printf 'toolchain-path=%s\n' "$toolchain_path"
+} >> "$GITHUB_OUTPUT"

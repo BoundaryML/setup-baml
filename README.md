@@ -6,7 +6,7 @@
 
 ```yaml
 steps:
-  - uses: actions/checkout@v4
+  - uses: actions/checkout@v7
 
   - uses: BoundaryML/setup-baml@v1
     with:
