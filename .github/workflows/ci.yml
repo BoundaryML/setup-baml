@@ -1,0 +1,111 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint-and-test:
+    name: Lint and test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Test wrapper output parsing
+        run: npm test
+
+      - name: Lint Bash
+        run: shellcheck scripts/setup.sh
+
+      - name: Parse PowerShell
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path scripts/setup.ps1), [ref]$tokens, [ref]$errors) | Out-Null
+          if ($errors.Count -gt 0) { throw ($errors | Out-String) }
+
+  cross-platform:
+    name: Install exact version (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Write conflicting project selector
+        shell: pwsh
+        run: |
+          @("[toolchain]", 'channel = "canary"') | Set-Content -Path baml.toml
+
+      - name: Set up BAML
+        id: baml
+        uses: ./
+        with:
+          toolchain: 0.16.0
+
+      - name: Verify setup outputs and PATH
+        shell: pwsh
+        env:
+          RESOLVED_VERSION: ${{ steps.baml.outputs.version }}
+          WRAPPER_PATH: ${{ steps.baml.outputs.path }}
+          TOOLCHAIN_PATH: ${{ steps.baml.outputs.toolchain-path }}
+        run: |
+          baml --version
+          if ($env:RESOLVED_VERSION -ne "0.16.0") { throw "unexpected version: $($env:RESOLVED_VERSION)" }
+          if (-not (Test-Path -LiteralPath $env:WRAPPER_PATH -PathType Leaf)) { throw "wrapper output does not exist" }
+          if (-not (Test-Path -LiteralPath $env:TOOLCHAIN_PATH -PathType Leaf)) { throw "toolchain output does not exist" }
+
+  project-selector:
+    name: Resolve baml.toml
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Write project selector
+        run: printf '[toolchain]\nchannel = "nightly"\n' > baml.toml
+
+      - name: Set up BAML from project
+        id: baml
+        uses: ./
+
+      - name: Verify nightly resolution
+        env:
+          RESOLVED_VERSION: ${{ steps.baml.outputs.version }}
+        run: |
+          test -n "$RESOLVED_VERSION"
+          baml --version
+
+  canary-selector:
+    name: Install canary
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Set up BAML canary
+        id: baml
+        uses: ./
+        with:
+          toolchain: canary
+
+      - name: Verify canary resolution
+        env:
+          RESOLVED_VERSION: ${{ steps.baml.outputs.version }}
+        run: |
+          test -n "$RESOLVED_VERSION"
+          baml --version
