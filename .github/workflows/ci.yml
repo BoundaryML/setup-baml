@@ -88,6 +88,7 @@ jobs:
           RESOLVED_VERSION: ${{ steps.baml.outputs.version }}
         run: |
           test -n "$RESOLVED_VERSION"
+          test "$(baml toolchain list | node lib/wrapper-output.mjs selector)" = "nightly"
           baml --version
 
   canary-selector:
@@ -96,6 +97,9 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Write conflicting project selector
+        run: printf '[toolchain]\nchannel = "nightly"\n' > baml.toml
 
       - name: Set up BAML canary
         id: baml
@@ -108,4 +112,5 @@ jobs:
           RESOLVED_VERSION: ${{ steps.baml.outputs.version }}
         run: |
           test -n "$RESOLVED_VERSION"
+          test "$(baml toolchain list | node lib/wrapper-output.mjs selector)" = "canary"
           baml --version
