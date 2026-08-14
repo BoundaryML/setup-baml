@@ -2,6 +2,7 @@ $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 
 $InstallerUrl = "https://pkg.boundaryml.com/install.ps1"
+$InstallerSha256 = "35424e1389f502795ad7324594dd0414ce66c2c0b5091fe6d42616e3286d94f5"
 $Helper = Join-Path $env:GITHUB_ACTION_PATH "lib/wrapper-output.mjs"
 $BinDir = Join-Path $env:BAML_HOME "bin"
 $Wrapper = Join-Path $BinDir "baml.exe"
@@ -15,6 +16,11 @@ Remove-Item Env:BAML_VERSION -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Path $Temp | Out-Null
 try {
   Invoke-WebRequest -Uri $InstallerUrl -OutFile $Installer -UseBasicParsing
+  $ActualSha256 = (Get-FileHash -Algorithm SHA256 -Path $Installer).Hash.ToLowerInvariant()
+  if ($ActualSha256 -ne $InstallerSha256) {
+    throw "setup-baml: official installer checksum verification failed"
+  }
+
   & $Installer -WrapperOnly -NoModifyPath -Yes
 
   $Requested = if ($env:INPUT_TOOLCHAIN) { $env:INPUT_TOOLCHAIN } else { "" }
