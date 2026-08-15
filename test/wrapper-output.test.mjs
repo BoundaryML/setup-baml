@@ -38,4 +38,6 @@ test("reads concrete versions from wrapper version output", () => {
 
 test("rejects unresolved version output", () => {
   assert.throws(() => resolveVersion("baml wrapper 0.2.4\nbaml toolchain not installed\n"));
+  assert.throws(() => resolveVersion("baml wrapper 0.2.4\nbaml toolchain canary\n"));
+  assert.throws(() => resolveVersion("baml wrapper 0.2.4\nbaml toolchain nightly\n"));
 });
