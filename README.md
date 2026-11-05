@@ -78,6 +78,10 @@ The action installs under the runner tool cache but does not use `actions/cache`
 
 The current wrapper has no machine-readable command that both resolves the active project selector and installs it. Until [BoundaryML/baml#4417](https://github.com/BoundaryML/baml/issues/4417) is available, omitted-input setup asks `baml toolchain list` to perform the canonical `baml.toml` lookup and parses its human-readable active-selector line; resolved version reporting similarly parses `baml --version`. This repository does not duplicate the wrapper's project traversal, manifest, checksum, or extraction logic.
 
+## Contributing
+
+This repository is a read-only mirror. Open changes against [`packaging/github-actions/setup-baml`](https://github.com/BoundaryML/baml/tree/canary/packaging/github-actions/setup-baml) in `BoundaryML/baml`.
+
 ## License
 
 Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE).
